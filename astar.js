@@ -1,32 +1,39 @@
-// javascript-astar
-// http://github.com/bgrins/javascript-astar
-// Freely distributable under the MIT License.
-// Implements the astar search algorithm in javascript using a binary heap.
+/**
+ * This file is part of the javascript-astar library.
+ * javascript-astar is freely distributable under the MIT License.
+ * See LICENSE for details.
+ */
 
 var astar = {
-    init: function(grid) {
-        for(var x = 0, xl = grid.length; x < xl; x++) {
-            for(var y = 0, yl = grid[x].length; y < yl; y++) {
-                var node = grid[x][y];
-                node.f = 0;
-                node.g = 0;
-                node.h = 0;
-                node.cost = node.type;
-                node.visited = false;
-                node.closed = false;
-                node.parent = null;
-            }
+    /**
+     * @param array GraphNodes
+     */
+    init: function(nodes) {
+        for(var i = 0, len = nodes.length; i < len; i++) {
+            var node = nodes[i];
+            node.f = 0;
+            node.g = 0;
+            node.h = 0;
+            node.visited = false;
+            node.closed = false;
+            node.parent = null;
         }
     },
     heap: function() {
-        return new BinaryHeap(function(node) { 
-            return node.f; 
+        return new BinaryHeap(function(node) {
+            return node.f;
         });
     },
-    search: function(grid, start, end, diagonal, heuristic) {
-        astar.init(grid);
-        heuristic = heuristic || astar.manhattan;
-        diagonal = !!diagonal;
+    /**
+     * @param graph Graph
+     * @param start GraphNode
+     * @param end GraphNode
+     * @param heuristic undefined|function(graph, pos0, pos1)
+     * @return array GraphNode Nodes from first step to (including
+     */
+    search: function(graph, start, end, heuristic) {
+        astar.init(graph.nodes);
+        heuristic = heuristic || astar.distance;
 
         var openHeap = astar.heap();
 
@@ -51,8 +58,8 @@ var astar = {
             // Normal case -- move currentNode from open to closed, process each of its neighbors.
             currentNode.closed = true;
 
-            // Find all neighbors for the current node. Optionally find diagonal neighbors as well (false by default).
-            var neighbors = astar.neighbors(grid, currentNode, diagonal);
+            // Find all neighbors for the current node.
+            var neighbors = astar.neighbors(graph, currentNode);
 
             for(var i=0, il = neighbors.length; i < il; i++) {
                 var neighbor = neighbors[i];
@@ -72,7 +79,7 @@ var astar = {
                     // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
                     neighbor.visited = true;
                     neighbor.parent = currentNode;
-                    neighbor.h = neighbor.h || heuristic(neighbor.pos, end.pos);
+                    neighbor.h = neighbor.h || heuristic(graph, neighbor.pos, end.pos);
                     neighbor.g = gScore;
                     neighbor.f = neighbor.g + neighbor.h;
 
@@ -91,64 +98,53 @@ var astar = {
         // No result was found - empty array signifies failure to find path.
         return [];
     },
-    manhattan: function(pos0, pos1) {
+    distance: function(graph, pos0, pos1) {
         // See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
 
-        var d1 = Math.abs (pos1.x - pos0.x);
-        var d2 = Math.abs (pos1.y - pos0.y);
-        return d1 + d2;
+        return graph.getDistanceDirect(pos0, pos1);
     },
-    neighbors: function(grid, node, diagonals) {
+    neighbors: function(graph, node) {
         var ret = [];
         var x = node.x;
         var y = node.y;
+        var neighbor = null;
 
-        // West
-        if(grid[x-1] && grid[x-1][y]) {
-            ret.push(grid[x-1][y]);
+        // North-East
+        neighbor = graph.getNode(x + 1, y);
+        if(neighbor) {
+            ret.push(neighbor);
         }
 
         // East
-        if(grid[x+1] && grid[x+1][y]) {
-            ret.push(grid[x+1][y]);
+        neighbor = graph.getNode(x + 1, y - 1);
+        if(neighbor) {
+            ret.push(neighbor);
         }
 
-        // South
-        if(grid[x] && grid[x][y-1]) {
-            ret.push(grid[x][y-1]);
+        // South-East
+        neighbor = graph.getNode(x, y - 1);
+        if(neighbor) {
+            ret.push(neighbor);
         }
 
-        // North
-        if(grid[x] && grid[x][y+1]) {
-            ret.push(grid[x][y+1]);
+        // South-West
+        neighbor = graph.getNode(x - 1, y);
+        if(neighbor) {
+            ret.push(neighbor);
         }
 
-        if (diagonals) {
+        // West
+        neighbor = graph.getNode(x - 1, y + 1);
+        if(neighbor) {
+            ret.push(neighbor);
+        }
 
-            // Southwest
-            if(grid[x-1] && grid[x-1][y-1]) {
-                ret.push(grid[x-1][y-1]);
-            }
-
-            // Southeast
-            if(grid[x+1] && grid[x+1][y-1]) {
-                ret.push(grid[x+1][y-1]);
-            }
-
-            // Northwest
-            if(grid[x-1] && grid[x-1][y+1]) {
-                ret.push(grid[x-1][y+1]);
-            }
-
-            // Northeast
-            if(grid[x+1] && grid[x+1][y+1]) {
-                ret.push(grid[x+1][y+1]);
-            }
-
+        // North-West
+        neighbor = graph.getNode(x, y + 1);
+        if(neighbor) {
+            ret.push(neighbor);
         }
 
         return ret;
     }
 };
-
-

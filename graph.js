@@ -1,55 +1,110 @@
-// javascript-astar
-// http://github.com/bgrins/javascript-astar
-// Freely distributable under the MIT License.
-// Includes Binary Heap (with modifications) from Marijn Haverbeke. 
-// http://eloquentjavascript.net/appendix2.html
+/**
+ * This file is part of the javascript-astar library.
+ * javascript-astar is freely distributable under the MIT License.
+ * See LICENSE for details.
+ */
 
 
-var GraphNodeType = { 
-    OPEN: 1, 
-    WALL: 0 
+var GraphNodeType = {
+    OPEN: 1,
+    WALL: 0
 };
 
-// Creates a Graph class used in the astar search algorithm.
-function Graph(grid) {
+/**
+ * Creates a Graph class used in the astar search algorithm.
+ * @param grid Array of hex tile objects.
+ * @param xFunc Function that returns a tile's x coordinate.
+ * @param yFunc Function that returns a tile's y coordinate.
+ * @param typeFunc Function that returns a tile's GraphNodeType.
+ * @param costFunc Function that returns a tile's cost.
+ * @param mapSize Object{ width: int, height: int }
+ */
+function Graph(tiles, xFunc, yFunc, typeFunc, costFunc, mapSize) {
     var nodes = [];
 
-    for (var x = 0; x < grid.length; x++) {
-        nodes[x] = [];
-        
-        for (var y = 0, row = grid[x]; y < row.length; y++) {
-            nodes[x][y] = new GraphNode(x, y, row[y]);
-        }
+    for (var i = 0; i < tiles.length; i++) {
+        var tile = tiles[i];
+        nodes[i] = new GraphNode(xFunc(tile), yFunc(tile), typeFunc(tile), costFunc(tile));
     }
 
-    this.input = grid;
+    this.input = tiles;
     this.nodes = nodes;
+    this.mapSize = mapSize;
 }
 
 Graph.prototype.toString = function() {
     var graphString = "\n";
     var nodes = this.nodes;
-    var rowDebug, row, y, l;
-    for (var x = 0, len = nodes.length; x < len; x++) {
-        rowDebug = "";
-        row = nodes[x];
-        for (y = 0, l = row.length; y < l; y++) {
-            rowDebug += row[y].type + " ";
-        }
-        graphString = graphString + rowDebug + "\n";
+    for (var i = 0, len = nodes.length; i < len; i++) {
+        graphString = graphString + nodes[i].toString() + " ";
     }
     return graphString;
 };
 
-function GraphNode(x,y,type) {
+/**
+ * @return True, if the tile with coordinates x, y
+ * is in the valid map area, false otherwise.
+ */
+Graph.prototype.isOnMap = function(x, y) {
+    var mapSize = this.mapSize;
+    return (
+                /** (-x - y) == z due to x + y + z == 0 */
+                (-x - y) >= 0 // top of map
+                && (-x - y) < mapSize.height // bottom of map
+                && x >= y // left of map; for each step to top left (y), go at least equal to top right (x)
+                && Math.ceil((x - y) / 2) < mapSize.width // right of map; the sum of x and y steps must be less than map width
+                );
+}
+
+/**
+ * @return The GraphNode object with coordinates x,y or null
+ * if no node at such coordinates.
+ */
+Graph.prototype.getNode = function(x, y) {
+    if (!this.isOnMap(x, y)) {
+        return null;
+    }
+
+    var tileIndex = this.index(x, y);
+    var node = this.nodes[tileIndex];
+    if (node) {
+        return node;
+    } else {
+        return null;
+    }
+}
+
+/**
+ * @return Array index number of tile with coordinates x, y.
+ */
+Graph.prototype.index = function(x, y) {
+    return this.mapSize.width * (-x - y) + x; // mapWidth * z + x // with x + y + z == 0
+}
+
+/**
+ * Calculate the distance between two map points.
+ * @param posStart Point object {x: int, y: int, z: int}
+ * @param posEnd Point object {x: int, y: int, z: int}
+ */
+Graph.prototype.getDistanceDirect = function(posStart, posEnd) {
+    return (Math.abs(posStart.x - posEnd.x)
+            + Math.abs(posStart.y - posEnd.y)
+            + Math.abs(posStart.z - posEnd.z))
+            / 2;
+}
+
+
+function GraphNode(x,y,type,cost) {
     this.data = { };
     this.x = x;
     this.y = y;
     this.pos = {
-        x: x, 
-        y: y
+        x: x,
+        y: y,
+        z: -x - y // x + y + z == 0
     };
     this.type = type;
+    this.cost = cost;
 }
 
 GraphNode.prototype.toString = function() {
@@ -89,14 +144,14 @@ BinaryHeap.prototype = {
     },
     remove: function(node) {
         var i = this.content.indexOf(node);
-    
+
         // When it is found, the process seen in 'pop' is repeated
         // to fill up the hole.
         var end = this.content.pop();
 
         if (i !== this.content.length - 1) {
             this.content[i] = end;
-            
+
             if (this.scoreFunction(end) < this.scoreFunction(node)) {
                 this.sinkDown(i);
             }
@@ -140,7 +195,7 @@ BinaryHeap.prototype = {
         var length = this.content.length,
             element = this.content[n],
             elemScore = this.scoreFunction(element);
-        
+
         while(true) {
             // Compute the indices of the child elements.
             var child2N = (n + 1) << 1, child1N = child2N - 1;

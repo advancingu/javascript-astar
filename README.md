@@ -1,53 +1,51 @@
 # javascript-astar
 
-## An implementation of the A* Search Algorithm in JavaScript
+## An A* Search Algorithm implementation in JavaScript, adapted for traversing Hex grids
 
-See a demo at http://www.briangrinstead.com/files/astar/
+This is a fork of https://github.com/bgrins/javascript-astar
 
-### astar.js
-
-The newest version of the algorithm using a Binary Heap.  It is quite faster than the original.
-http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript-updated
-Binary Heap taken from http://eloquentjavascript.net/appendix2.html (license: http://creativecommons.org/licenses/by/3.0/)
-	
-	
-### original-implementation/astar-list.js: 
-
-The original version of the algorithm based off the original blog post at: http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript
-I left it in because it may be a little easier for some people to understand, but if you are planning on actually using this, I would strongly recommend using astar.js instead.
+The Hex grid coordinate system is assumed to follow http://www.redblobgames.com/grids/hexagons/#coordinates , i.e. x points to northeast, y to northwest, z to south with ``x + y + z = 0``.
 
 ## Sample Usage
-
-If you want just the A* search code (not the demo visualization), use code like this http://gist.github.com/581352
 
 	<script type='text/javascript' src='graph.js'></script>
 	<script type='text/javascript' src='astar.js'></script>
 	<script type='text/javascript'>
-		var graph = new Graph([
-			[1,1,1,1],
-			[0,1,1,0],
-			[0,0,1,1]
-		]);
-		var start = graph.nodes[0][0];
-		var end = graph.nodes[1][2];
-		var result = astar.search(graph.nodes, start, end);
-		// result is an array containing the shortest path
-		
-		var resultWithDiagonals = astar.search(graph.nodes, start, end, true);
-		// result now searches diagonal neighbors as well
+    var tiles = [];
+    tiles.push({
+      x: 0,
+      y: 0
+      // ...
+    });
+    tiles.push({
+      x: 1,
+      y: -1
+      // ...
+    });
+    // ...
+    var mapSize = {
+      width: 2,
+      height: 1
+    };
 
-		// Weight can easily be added by increasing the values within the graph, and where 0 is infinite (a wall)
-		var graphWithWeight = new Graph([
-			[1,1,2,30],
-			[0,4,1.3,0],
-			[0,0,5,1]
-		]);
-		var startWithWeight = graphWithWeight.nodes[0][0];
-		var endWithWeight = graphWithWeight.nodes[1][2];
-		var resultWithWeight = astar.search(graphWithWeight.nodes, startWithWeight, endWithWeight);
-
-		// resultWithWeight is an array containing the shortest path taking into account the weight of a node
+		var graph = new Graph(tiles,
+      function(tile) { return tile.x; },
+      function(tile) { return tile.y; },
+      function(tile) { return GraphNodeType.OPEN; }, // traversable or wall
+      function(tile) { return 1; }, // node cost
+      mapSize
+    );
+		var start = graph.getNode(0, 0);
+		var end = graph.getNode(1, -1);
+		var result = astar.search(graph, start, end);
+		// result is an array containing the nodes to traverse in order to get from start to end with the lowest cost; empty array if no path could be found
 	</script>
 
 
+## History
+
+This library is based on the work of
+
+* https://github.com/bgrins/javascript-astar
+* Binary Heap (with modifications) from Marijn Haverbeke http://eloquentjavascript.net/appendix2.html
 
