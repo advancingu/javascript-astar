@@ -8,7 +8,7 @@ The Hex grid coordinate system is assumed to follow http://www.redblobgames.com/
 
 ## Sample Usage
 
-```javascript
+```html
   <script type='text/javascript' src='graph.js'></script>
   <script type='text/javascript' src='astar.js'></script>
   <script type='text/javascript'>
