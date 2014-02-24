@@ -29,7 +29,8 @@ var astar = {
      * @param start GraphNode
      * @param end GraphNode
      * @param heuristic undefined|function(graph, pos0, pos1)
-     * @return array GraphNode Nodes from first step to (including
+     * @return array Node objects graph was created from, ordered
+     * from first step after start node to (including) end node.
      */
     search: function(graph, start, end, heuristic) {
         astar.init(graph.nodes);
@@ -44,12 +45,12 @@ var astar = {
             // Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
             var currentNode = openHeap.pop();
 
-            // End case -- result has been found, return the traced path.
+            // End case -- result has been found, return the caller's original objects in the order to traverse.
             if(currentNode === end) {
                 var curr = currentNode;
                 var ret = [];
                 while(curr.parent) {
-                    ret.push(curr);
+                    ret.push(curr.data); // return caller's objects, not temporary graph nodes
                     curr = curr.parent;
                 }
                 return ret.reverse();

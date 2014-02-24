@@ -25,6 +25,7 @@ function Graph(tiles, xFunc, yFunc, typeFunc, costFunc, mapSize) {
     for (var i = 0; i < tiles.length; i++) {
         var tile = tiles[i];
         nodes[i] = new GraphNode(xFunc(tile), yFunc(tile), typeFunc(tile), costFunc(tile));
+        nodes[i].data = tile; // keep reference to caller's tile object
     }
 
     this.input = tiles;

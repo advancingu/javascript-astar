@@ -39,7 +39,7 @@ The Hex grid coordinate system is assumed to follow http://www.redblobgames.com/
     var start = graph.getNode(0, 0);
     var end = graph.getNode(1, -1);
     var result = astar.search(graph, start, end);
-    // result is an array containing the nodes to traverse in order to get from start to end with the lowest cost; empty array if no path could be found
+    // result is an array containing the tiles to traverse in order to get from start to end with the lowest cost; empty array if no path could be found
   </script>
 ```
 
