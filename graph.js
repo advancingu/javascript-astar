@@ -94,7 +94,12 @@ Graph.prototype.getDistanceDirect = function(posStart, posEnd) {
             / 2;
 }
 
-
+/**
+ * @param x int X coordinate of node.
+ * @param y int Y coordinate of node.
+ * @param type int|bool Set to non-falsy value if traversable, or falsy value otherwise.
+ * @param cost int Cost of node traversal, if traversable.
+ */
 function GraphNode(x,y,type,cost) {
     this.data = { };
     this.x = x;
@@ -104,7 +109,7 @@ function GraphNode(x,y,type,cost) {
         y: y,
         z: -x - y // x + y + z == 0
     };
-    this.type = type;
+    this.type = (type) ? GraphNodeType.OPEN : GraphNodeType.WALL;
     this.cost = cost;
 }
 
