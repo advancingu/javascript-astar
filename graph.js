@@ -101,7 +101,6 @@ Graph.prototype.getDistanceDirect = function(posStart, posEnd) {
  * @param cost int Cost of node traversal, if traversable.
  */
 function GraphNode(x,y,type,cost) {
-    this.data = { };
     this.x = x;
     this.y = y;
     this.pos = {
