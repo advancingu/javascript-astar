@@ -17,20 +17,39 @@ var GraphNodeType = {
  * @param yFunc Function that returns a tile's y coordinate.
  * @param typeFunc Function that returns a tile's GraphNodeType.
  * @param costFunc Function that returns a tile's cost.
+ * @param neighborsFunc Function that returns a tile's neighbors. If undefined, default function is used.
  * @param mapSize Object{ width: int, height: int }
  */
-function Graph(tiles, xFunc, yFunc, typeFunc, costFunc, mapSize) {
+function Graph(tiles, xFunc, yFunc, typeFunc, costFunc, neighborsFunc, mapSize) {
     var nodes = [];
 
     for (var i = 0; i < tiles.length; i++) {
         var tile = tiles[i];
-        nodes[i] = new GraphNode(xFunc(tile), yFunc(tile), typeFunc(tile), costFunc(tile));
-        nodes[i].data = tile; // keep reference to caller's tile object
+        var node = new GraphNode(xFunc(tile), yFunc(tile), typeFunc(tile), costFunc(tile));
+        node.data = tile; // keep reference to caller's tile object
+        nodes[i] = node;
     }
 
-    this.input = tiles;
     this.nodes = nodes;
     this.mapSize = mapSize;
+
+    for (i = 0; i < nodes.length; i++) {
+        if (neighborsFunc) {
+            // call user-defined neighbors function with user-data as argument (tile)
+            var dataNeighbors = neighborsFunc(nodes[i].data);
+            var nodeNeighbors = [];
+            for (var j = 0; j < dataNeighbors.length; j++) {
+                var dataNeighbor = dataNeighbors[j];
+                // get a temporary internal node from for the user-returned tile
+                var neighborNode = new GraphNode(xFunc(dataNeighbor), yFunc(dataNeighbor), typeFunc(dataNeighbor), costFunc(dataNeighbor));
+                // assign the permanent node with the same coordinates as the temporary node
+                nodeNeighbors.push(this.getNode(neighborNode.x, neighborNode.y));
+            }
+            nodes[i].neighbors = nodeNeighbors;
+        } else {
+            nodes[i].neighbors = this.getNeighbors(this, nodes[i]);
+        }
+    }
 }
 
 Graph.prototype.toString = function() {
@@ -92,6 +111,57 @@ Graph.prototype.getDistanceDirect = function(posStart, posEnd) {
             + Math.abs(posStart.y - posEnd.y)
             + Math.abs(posStart.z - posEnd.z))
             / 2;
+}
+
+/**
+ * Default function to determine a node's neighbors.
+ * @param graph Graph The complete initialized graph.
+ * @param node GraphNode Node to determine neighbors for.
+ * @return array[GraphNode]
+ */
+Graph.prototype.getNeighbors = function(graph, node) {
+    var ret = [];
+    var x = node.x;
+    var y = node.y;
+    var neighbor = null;
+
+    // North-East
+    neighbor = graph.getNode(x + 1, y);
+    if(neighbor) {
+        ret.push(neighbor);
+    }
+
+    // East
+    neighbor = graph.getNode(x + 1, y - 1);
+    if(neighbor) {
+        ret.push(neighbor);
+    }
+
+    // South-East
+    neighbor = graph.getNode(x, y - 1);
+    if(neighbor) {
+        ret.push(neighbor);
+    }
+
+    // South-West
+    neighbor = graph.getNode(x - 1, y);
+    if(neighbor) {
+        ret.push(neighbor);
+    }
+
+    // West
+    neighbor = graph.getNode(x - 1, y + 1);
+    if(neighbor) {
+        ret.push(neighbor);
+    }
+
+    // North-West
+    neighbor = graph.getNode(x, y + 1);
+    if(neighbor) {
+        ret.push(neighbor);
+    }
+
+    return ret;
 }
 
 /**

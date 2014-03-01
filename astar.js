@@ -59,8 +59,8 @@ var astar = {
             // Normal case -- move currentNode from open to closed, process each of its neighbors.
             currentNode.closed = true;
 
-            // Find all neighbors for the current node.
-            var neighbors = astar.neighbors(graph, currentNode);
+            // Get all neighbors for the current node.
+            var neighbors = astar.neighbors(currentNode);
 
             for(var i=0, il = neighbors.length; i < il; i++) {
                 var neighbor = neighbors[i];
@@ -104,48 +104,7 @@ var astar = {
 
         return graph.getDistanceDirect(pos0, pos1);
     },
-    neighbors: function(graph, node) {
-        var ret = [];
-        var x = node.x;
-        var y = node.y;
-        var neighbor = null;
-
-        // North-East
-        neighbor = graph.getNode(x + 1, y);
-        if(neighbor) {
-            ret.push(neighbor);
-        }
-
-        // East
-        neighbor = graph.getNode(x + 1, y - 1);
-        if(neighbor) {
-            ret.push(neighbor);
-        }
-
-        // South-East
-        neighbor = graph.getNode(x, y - 1);
-        if(neighbor) {
-            ret.push(neighbor);
-        }
-
-        // South-West
-        neighbor = graph.getNode(x - 1, y);
-        if(neighbor) {
-            ret.push(neighbor);
-        }
-
-        // West
-        neighbor = graph.getNode(x - 1, y + 1);
-        if(neighbor) {
-            ret.push(neighbor);
-        }
-
-        // North-West
-        neighbor = graph.getNode(x, y + 1);
-        if(neighbor) {
-            ret.push(neighbor);
-        }
-
-        return ret;
+    neighbors: function(node) {
+        return node.neighbors;
     }
 };
